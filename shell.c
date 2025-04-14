@@ -145,7 +145,7 @@ int main(void)
 
         /* Determine if the command is an absolute/relative path or needs PATH resolution */
         if (access(args[0], X_OK) == 0)
-            command_path = args[0];
+            command_path = strdup(args[0]); /* Ensure memory safety */
         else
             command_path = find_command_path(args[0]);
 
@@ -161,6 +161,7 @@ int main(void)
         {
             perror("Error:");
             free(args);
+            free(command_path);
             break;
         }
         if (pid == 0) /* Child process */
@@ -169,6 +170,7 @@ int main(void)
             {
                 perror("./shell");
                 free(args);
+                free(command_path);
                 exit(EXIT_FAILURE);
             }
         }
@@ -177,8 +179,7 @@ int main(void)
             wait(&status);
         }
 
-        if (command_path != args[0]) /* Free memory only if allocated */
-            free(command_path);
+        free(command_path);
         free(args);
     }
 
