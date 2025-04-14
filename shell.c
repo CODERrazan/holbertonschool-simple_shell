@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 
 /* Declare the global environment variable */
 extern char **environ;
@@ -15,14 +16,19 @@ extern char **environ;
  */
 char *find_command_path(char *command)
 {
-    char *path, *token, *full_path;
+    char *path, *token, *full_path, *dup_path;
     int path_length;
+    struct stat st;
 
     path = getenv("PATH");
     if (!path)
         return NULL;
 
-    token = strtok(path, ":");
+    dup_path = strdup(path); /* Duplicate PATH for safe tokenization */
+    if (!dup_path)
+        return NULL;
+
+    token = strtok(dup_path, ":");
     while (token)
     {
         path_length = strlen(token) + strlen(command) + 2;
@@ -31,17 +37,21 @@ char *find_command_path(char *command)
         if (!full_path)
         {
             perror("Allocation error");
+            free(dup_path);
             exit(EXIT_FAILURE);
         }
 
         sprintf(full_path, "%s/%s", token, command);
-        if (access(full_path, X_OK) == 0)
+        if (stat(full_path, &st) == 0 && access(full_path, X_OK) == 0)
+        {
+            free(dup_path); /* Free duplicated PATH */
             return full_path;
+        }
 
         free(full_path);
         token = strtok(NULL, ":");
     }
-
+    free(dup_path);
     return NULL;
 }
 
@@ -54,9 +64,10 @@ char *find_command_path(char *command)
 char **tokenize_command(char *buffer)
 {
     char *token;
-    char **args = malloc(10 * sizeof(char *));
+    char **args;
     int i = 0;
 
+    args = malloc(10 * sizeof(char *));
     if (!args)
     {
         perror("Allocation error");
@@ -82,12 +93,12 @@ char **tokenize_command(char *buffer)
 int main(void)
 {
     char *buffer = NULL, *command_path;
+    char **args;
     size_t bufsize = 0;
     ssize_t characters;
     pid_t pid;
     int status;
     int is_interactive = isatty(STDIN_FILENO); /* Detect interactive mode */
-    char **args; /* Declare variables at start of block */
 
     while (1)
     {
@@ -112,7 +123,7 @@ int main(void)
 
         args = tokenize_command(buffer);
 
-        /* If command is an absolute or relative path, use it directly */
+        /* Determine if the command is an absolute/relative path or needs PATH resolution */
         if (access(args[0], X_OK) == 0)
             command_path = args[0];
         else
@@ -129,6 +140,7 @@ int main(void)
         if (pid == -1)
         {
             perror("Error:");
+            free(args);
             break;
         }
         if (pid == 0) /* Child process */
