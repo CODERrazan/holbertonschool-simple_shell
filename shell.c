@@ -9,6 +9,26 @@
 extern char **environ;
 
 /**
+ * get_path_variable - Retrieves the PATH variable manually.
+ *
+ * Return: The value of PATH, or NULL if not found.
+ */
+char *get_path_variable()
+{
+    int i = 0;
+    char *path_prefix = "PATH=";
+
+    while (environ[i])
+    {
+        if (strncmp(environ[i], path_prefix, 5) == 0)
+            return environ[i] + 5; /* Skip "PATH=" */
+        i++;
+    }
+
+    return NULL;
+}
+
+/**
  * find_command_path - Searches for a command in the PATH variable.
  * @command: The command to search for.
  *
@@ -20,7 +40,7 @@ char *find_command_path(char *command)
     int path_length;
     struct stat st;
 
-    path = getenv("PATH");
+    path = get_path_variable();
     if (!path)
         return NULL;
 
