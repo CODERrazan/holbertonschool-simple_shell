@@ -44,7 +44,7 @@ char *find_command_path(char *command)
         sprintf(full_path, "%s/%s", token, command);
         if (stat(full_path, &st) == 0 && access(full_path, X_OK) == 0)
         {
-            free(dup_path); /* Free duplicated PATH */
+            free(dup_path);
             return full_path;
         }
 
