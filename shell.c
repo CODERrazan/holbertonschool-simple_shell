@@ -19,19 +19,26 @@ size_t bufsize = 0;
 ssize_t characters;
 pid_t pid;
 int status;
+int is_interactive = isatty(STDIN_FILENO); /* Detect interactive mode */
 
-while (1) /* Loop to continuously show the prompt */
+while (1) /* Loop to continuously run the shell */
 {
-write(STDOUT_FILENO, "#cisfun$ ", 9); /* Display prompt */
+if (is_interactive) /* Display prompt only in interactive mode */
+write(STDOUT_FILENO, "#cisfun$ ", 9);
+
 characters = getline(&buffer, &bufsize, stdin); /* Read user input */
 
 if (characters == -1) /* Handle EOF (Ctrl+D) */
 {
+if (is_interactive)
 write(STDOUT_FILENO, "\n", 1);
 break;
 }
 
 buffer[characters - 1] = '\0'; /* Remove newline character */
+
+if (strcmp(buffer, "exit") == 0) /* Exit the shell if "exit" is typed */
+break;
 
 pid = fork(); /* Fork to create a child process */
 if (pid == -1) /* Handle fork failure */
@@ -41,7 +48,6 @@ break;
 }
 if (pid == 0) /* Child process */
 {
-/* Dynamically allocate args array */
 char *args[2];
 args[0] = buffer; /* Command name */
 args[1] = NULL;   /* End of arguments */
@@ -58,6 +64,6 @@ wait(&status); /* Wait for the child process to finish */
 }
 }
 
-free(buffer); /* Free the allocated buffer */
+free(buffer); /* Free allocated buffer */
 return (0);
 }
