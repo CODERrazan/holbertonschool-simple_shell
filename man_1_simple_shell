@@ -1,0 +1,32 @@
+.TH SIMPLE_SHELL 1 "April 2025" "Version 1.0" "User Commands"
+
+.SH NAME
+simple_shell \- A simple Unix command-line interpreter.
+
+.SH SYNOPSIS
+.B ./hsh
+
+.SH DESCRIPTION
+.B simple_shell
+is a command-line interpreter that mimics the behavior of `/bin/sh`. It reads user input, parses commands, executes programs, and displays output.
+
+.SH USAGE
+Interactive mode:
+  ./hsh
+  ($) /bin/ls
+  ($) exit
+
+Non-interactive mode:
+  echo "/bin/ls" | ./hsh
+
+.SH OPTIONS
+The Simple Shell does not currently support any command-line options.
+
+.SH ENVIRONMENT VARIABLES
+The shell uses the `PATH` environment variable to locate executables. If the `PATH` is not set, only absolute or relative paths can be used.
+
+.SH AUTHORS
+.B Razan Alabdulhadi
+<razan_8801@icloud.com>
+.B Layan
+<layanAzez@gmail.com>
