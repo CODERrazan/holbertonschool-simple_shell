@@ -4,6 +4,7 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <limits.h>
 
 extern char **environ;
 
@@ -35,8 +36,10 @@ return "";
 char *find_command_path(char *command)
 {
 char *path, *token, *full_path, *dup_path;
-int path_length;
 struct stat st;
+
+if (access(command, X_OK) == 0)  /* Direct execution for absolute/relative paths */
+return strdup(command);
 
 path = get_path_variable();
 if (!path || strlen(path) == 0)
@@ -49,9 +52,7 @@ return NULL;
 token = strtok(dup_path, ":");
 while (token)
 {
-path_length = strlen(token) + strlen(command) + 2;
-full_path = malloc(path_length);
-
+full_path = malloc(strlen(token) + strlen(command) + 2);
 if (!full_path)
 {
 perror("Allocation error");
@@ -141,9 +142,6 @@ break;
 
 args = tokenize_command(buffer);
 
-if (access(args[0], X_OK) == 0)
-command_path = strdup(args[0]);
-else
 command_path = find_command_path(args[0]);
 
 if (!command_path)
