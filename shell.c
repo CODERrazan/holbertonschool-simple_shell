@@ -137,7 +137,10 @@ if (strlen(buffer) == 0)
 continue;
 
 if (strcmp(buffer, "exit") == 0)
-break;
+{
+free(buffer);
+exit(0);
+}
 
 args = tokenize_command(buffer);
 
