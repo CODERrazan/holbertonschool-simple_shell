@@ -174,6 +174,8 @@ exit(2);
 else
 {
 wait(&status);
+if (WIFEXITED(status))
+status = WEXITSTATUS(status);
 }
 
 free(command_path);
