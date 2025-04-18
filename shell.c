@@ -4,14 +4,13 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
-#include <limits.h>
 
 extern char **environ;
 
 /**
 * get_path_variable - Retrieves the PATH variable manually.
 *
-* Return: The value of PATH, or an empty string if not found.
+* Return: The value of PATH, or NULL if not found.
 */
 char *get_path_variable()
 {
@@ -24,7 +23,7 @@ if (strncmp(environ[i], path_prefix, 5) == 0)
 return environ[i] + 5;
 i++;
 }
-return "";
+return NULL;
 }
 
 /**
@@ -38,11 +37,11 @@ char *find_command_path(char *command)
 char *path, *token, *full_path, *dup_path;
 struct stat st;
 
-if (access(command, X_OK) == 0)  /* Direct execution for absolute/relative paths */
+if (access(command, X_OK) == 0)
 return strdup(command);
 
 path = get_path_variable();
-if (!path || strlen(path) == 0)
+if (!path)
 return NULL;
 
 dup_path = strdup(path);
