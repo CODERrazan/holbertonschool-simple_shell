@@ -168,7 +168,7 @@ if (execve(command_path, args, environ) == -1)
 perror("./shell");
 free(args);
 free(command_path);
-exit(EXIT_FAILURE);
+exit(2);
 }
 }
 else
