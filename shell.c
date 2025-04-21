@@ -48,7 +48,9 @@ return NULL;
 }
 
 path = get_path_variable();
-if (!path || strlen(path) == 0) /* Handle empty PATH case */
+
+/* If PATH is empty, return NULL (force the use of absolute paths) */
+if (!path || strlen(path) == 0)
 return NULL;
 
 dup_path = strdup(path); /* Duplicate PATH for safe tokenization */
@@ -153,11 +155,16 @@ args = tokenize_command(buffer);
 
 command_path = find_command_path(args[0]);
 
-if (!command_path) /* Prevent fork() if command doesn't exist */
+if (!command_path)
+{
+/* If PATH is empty, allow only absolute path execution */
+if (args[0][0] != '/')
 {
 fprintf(stderr, "%s: command not found\n", args[0]);
 free(args);
 continue;
+}
+command_path = strdup(args[0]); /* Execute as absolute path */
 }
 
 pid = fork();
