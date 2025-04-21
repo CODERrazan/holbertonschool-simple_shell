@@ -5,6 +5,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 
+/* Declare the global environment variable */
 extern char **environ;
 
 /**
@@ -20,9 +21,10 @@ char *path_prefix = "PATH=";
 while (environ[i])
 {
 if (strncmp(environ[i], path_prefix, 5) == 0)
-return environ[i] + 5;
+return environ[i] + 5; /* Skip "PATH=" */
 i++;
 }
+
 return NULL;
 }
 
@@ -37,14 +39,19 @@ char *find_command_path(char *command)
 char *path, *token, *full_path, *dup_path;
 struct stat st;
 
+/* If the command is an absolute or relative path, use it directly */
+if (command[0] == '/' || command[0] == '.')
+{
 if (access(command, X_OK) == 0)
 return strdup(command);
+return NULL;
+}
 
 path = get_path_variable();
-if (!path)
+if (!path || strlen(path) == 0) /* Handle empty PATH case */
 return NULL;
 
-dup_path = strdup(path);
+dup_path = strdup(path); /* Duplicate PATH for safe tokenization */
 if (!dup_path)
 return NULL;
 
@@ -116,12 +123,12 @@ size_t bufsize = 0;
 ssize_t characters;
 pid_t pid;
 int status;
-int is_interactive = isatty(STDIN_FILENO);
+int is_interactive = isatty(STDIN_FILENO); /* Detect interactive mode */
 
 while (1)
 {
 if (is_interactive)
-write(STDOUT_FILENO, ":) ", 3);
+write(STDOUT_FILENO, ":) ", 3); /* Updated prompt */
 
 characters = getline(&buffer, &bufsize, stdin);
 if (characters == -1)
@@ -146,7 +153,7 @@ args = tokenize_command(buffer);
 
 command_path = find_command_path(args[0]);
 
-if (!command_path)
+if (!command_path) /* Prevent fork() if command doesn't exist */
 {
 fprintf(stderr, "%s: command not found\n", args[0]);
 free(args);
@@ -161,7 +168,7 @@ free(args);
 free(command_path);
 break;
 }
-if (pid == 0)
+if (pid == 0) /* Child process */
 {
 if (execve(command_path, args, environ) == -1)
 {
@@ -171,7 +178,7 @@ free(command_path);
 exit(2);
 }
 }
-else
+else /* Parent process */
 {
 wait(&status);
 if (WIFEXITED(status))
