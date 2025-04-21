@@ -53,9 +53,13 @@ return NULL;
 
 path = get_path_variable();
 
-/* If PATH is empty, return NULL (force the use of absolute paths) */
+/* If PATH is empty, allow execution of absolute paths */
 if (!path || strlen(path) == 0)
+{
+if (access(command, X_OK) == 0)
+return strdup(command);
 return NULL;
+}
 
 dup_path = strdup(path); /* Duplicate PATH for safe tokenization */
 if (!dup_path)
@@ -164,7 +168,8 @@ if (!command_path)
 /* If PATH is empty, allow only absolute path execution */
 if (args[0][0] != '/')
 {
-fprintf(stderr, "%s: command not found\n", args[0]);
+fprintf(stderr, "./hsh: 1: %s: not found\n", args[0]);
+status = 127; /* Correct exit status */
 free(args);
 continue;
 }
