@@ -17,11 +17,15 @@ char *get_path_variable()
 {
 int i = 0;
 char *path_prefix = "PATH=";
+char *path1_prefix = "PATH1=";
 
 while (environ[i])
 {
 if (strncmp(environ[i], path_prefix, 5) == 0)
 return environ[i] + 5; /* Skip "PATH=" */
+
+if (strncmp(environ[i], path1_prefix, 6) == 0)
+return environ[i] + 6; /* Use PATH1 if PATH is missing */
 i++;
 }
 
