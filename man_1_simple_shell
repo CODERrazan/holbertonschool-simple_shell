@@ -1,4 +1,4 @@
-.TH SIMPLE_SHELL 1 "April 2025" "Version 1.0" "User Commands"
+.TH SIMPLE_SHELL 1 "April 2025" "Version 1.1" "User Commands"
 
 .SH NAME
 simple_shell \- A simple Unix command-line interpreter.
@@ -8,25 +8,53 @@ simple_shell \- A simple Unix command-line interpreter.
 
 .SH DESCRIPTION
 .B simple_shell
-is a command-line interpreter that mimics the behavior of `/bin/sh`. It reads user input, parses commands, executes programs, and displays output.
+is a Unix command-line interpreter designed to mimic the behavior of /bin/sh. It supports the execution of commands, both interactively and non-interactively, and includes built-in commands such as exit and env.
 
 .SH USAGE
 Interactive mode:
-  ./hsh
-  ($) /bin/ls
-  ($) exit
+.TP
+./hsh
+($) /bin/ls
+($) ls -l
+($) env
+($) exit
 
 Non-interactive mode:
-  echo "/bin/ls" | ./hsh
+.TP
+echo "/bin/ls" | ./hsh
+
+.SH BUILT-IN COMMANDS
+The Simple Shell includes the following built-in commands:
+.TP
+.B exit
+Exits the shell immediately. Does not accept any arguments.
+
+.TP
+.B env
+Displays the current environment variables.
 
 .SH OPTIONS
 The Simple Shell does not currently support any command-line options.
 
 .SH ENVIRONMENT VARIABLES
-The shell uses the `PATH` environment variable to locate executables. If the `PATH` is not set, only absolute or relative paths can be used.
+The Simple Shell uses the following environment variables:
+.TP
+.B PATH
+Specifies the directories to search for executable commands. If PATH is not set, only absolute or relative paths can be executed.
+
+.TP
+.B PATH1
+An alternative to PATH, used when PATH is unset.
+
+.SH SCRIPT SUPPORT
+The Simple Shell can execute scripts such as the hbtn_ls script:
+.TP
+.B /home/student_jail/student_repo/hbtn_ls
+This is a custom script that runs the ls command.
 
 .SH AUTHORS
 .B Razan Alabdulhadi
 <razan_8801@icloud.com>
+.TP
 .B Layan
 <layanAzez@gmail.com>
