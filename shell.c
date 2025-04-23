@@ -17,7 +17,7 @@ char *get_path_variable()
 int i = 0;
 char *path_prefix = "PATH=";
 
-while (environ[i])
+while (environ && environ[i]) /* Ensure environ is not NULL */
 {
 if (strncmp(environ[i], path_prefix, 5) == 0)
 return environ[i] + 5;
@@ -104,11 +104,14 @@ return args;
 }
 
 /**
-* print_env - Prints the current environment variables.
+* print_env - Prints the current environment variables safely.
 */
 void print_env(void)
 {
 int i = 0;
+
+if (!environ) /* Prevent crashes if environ is NULL */
+return;
 
 while (environ[i])
 {
