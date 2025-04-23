@@ -8,6 +8,63 @@
 extern char **environ;
 
 /**
+* get_path_variable - Retrieves the PATH variable using getenv().
+*
+* Return: The value of PATH, or NULL if not found.
+*/
+char *get_path_variable()
+{
+return getenv("PATH");
+}
+
+/**
+* find_command_path - Searches for a command in the PATH variable.
+* @command: The command to search for.
+*
+* Return: The full path if found, otherwise NULL.
+*/
+char *find_command_path(char *command)
+{
+char *path, *token, *full_path, *dup_path;
+struct stat st;
+
+if (access(command, X_OK) == 0)
+return strdup(command); /* Direct execution for absolute/relative paths */
+
+path = get_path_variable();
+if (!path)
+return NULL;
+
+dup_path = strdup(path);
+if (!dup_path)
+return NULL;
+
+token = strtok(dup_path, ":");
+while (token)
+{
+full_path = malloc(strlen(token) + strlen(command) + 2);
+if (!full_path)
+{
+perror("Allocation error");
+free(dup_path);
+exit(EXIT_FAILURE);
+}
+
+sprintf(full_path, "%s/%s", token, command);
+if (stat(full_path, &st) == 0 && access(full_path, X_OK) == 0)
+{
+free(dup_path);
+return full_path;
+}
+
+free(full_path);
+token = strtok(NULL, ":");
+}
+free(dup_path);
+return NULL;
+}
+
+/**
 * tokenize_command - Splits a string into an array of arguments.
 * @buffer: The string to tokenize.
 *
@@ -42,15 +99,17 @@ return args;
 *
 * Return: Always 0.
 */
-int main(void)
+int main(int argc, char **argv)
 {
-char *buffer = NULL;
+char *buffer = NULL, *command_path;
 char **args;
 size_t bufsize = 0;
 ssize_t characters;
 pid_t pid;
 int status;
 int is_interactive = isatty(STDIN_FILENO);
+
+(void)argc;
 
 while (1)
 {
@@ -77,11 +136,11 @@ exit(0);
 }
 
 args = tokenize_command(buffer);
+command_path = find_command_path(args[0]);
 
-/* Directly execute the provided command */
-if (access(args[0], X_OK) != 0)
+if (!command_path)
 {
-fprintf(stderr, "%s: command not found\n", args[0]);
+fprintf(stderr, "%s: 1: %s: not found\n", argv[0], args[0]);
 free(args);
 continue;
 }
@@ -91,14 +150,16 @@ if (pid == -1)
 {
 perror("Error:");
 free(args);
+free(command_path);
 break;
 }
 if (pid == 0)
 {
-if (execve(args[0], args, environ) == -1)
+if (execve(command_path, args, environ) == -1)
 {
-perror("./shell");
+perror(argv[0]);
 free(args);
+free(command_path);
 exit(2);
 }
 }
@@ -109,6 +170,7 @@ if (WIFEXITED(status))
 status = WEXITSTATUS(status);
 }
 
+free(command_path);
 free(args);
 }
 
