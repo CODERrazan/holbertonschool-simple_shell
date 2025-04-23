@@ -5,7 +5,6 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 
-/* Declare the global environment variable */
 extern char **environ;
 
 /**
@@ -17,18 +16,13 @@ char *get_path_variable()
 {
 int i = 0;
 char *path_prefix = "PATH=";
-char *path1_prefix = "PATH1=";
 
 while (environ[i])
 {
 if (strncmp(environ[i], path_prefix, 5) == 0)
-return environ[i] + 5; /* Skip "PATH=" */
-
-if (strncmp(environ[i], path1_prefix, 6) == 0)
-return environ[i] + 6; /* Use PATH1 if PATH is missing */
+return environ[i] + 5;
 i++;
 }
-
 return NULL;
 }
 
@@ -43,25 +37,14 @@ char *find_command_path(char *command)
 char *path, *token, *full_path, *dup_path;
 struct stat st;
 
-/* If the command is an absolute or relative path, use it directly */
-if (command[0] == '/' || command[0] == '.')
-{
 if (access(command, X_OK) == 0)
 return strdup(command);
-return NULL;
-}
 
 path = get_path_variable();
-
-/* If PATH is empty, allow execution of absolute paths */
-if (!path || strlen(path) == 0)
-{
-if (access(command, X_OK) == 0)
-return strdup(command);
+if (!path)
 return NULL;
-}
 
-dup_path = strdup(path); /* Duplicate PATH for safe tokenization */
+dup_path = strdup(path);
 if (!dup_path)
 return NULL;
 
@@ -133,12 +116,12 @@ size_t bufsize = 0;
 ssize_t characters;
 pid_t pid;
 int status;
-int is_interactive = isatty(STDIN_FILENO); /* Detect interactive mode */
+int is_interactive = isatty(STDIN_FILENO);
 
 while (1)
 {
 if (is_interactive)
-write(STDOUT_FILENO, ":) ", 3); /* Updated prompt */
+write(STDOUT_FILENO, ":) ", 3);
 
 characters = getline(&buffer, &bufsize, stdin);
 if (characters == -1)
@@ -165,15 +148,9 @@ command_path = find_command_path(args[0]);
 
 if (!command_path)
 {
-/* If PATH is empty, allow only absolute path execution */
-if (args[0][0] != '/')
-{
-fprintf(stderr, "./hsh: 1: %s: not found\n", args[0]);
-status = 127; /* Correct exit status */
+fprintf(stderr, "%s: command not found\n", args[0]);
 free(args);
 continue;
-}
-command_path = strdup(args[0]); /* Execute as absolute path */
 }
 
 pid = fork();
@@ -184,7 +161,7 @@ free(args);
 free(command_path);
 break;
 }
-if (pid == 0) /* Child process */
+if (pid == 0)
 {
 if (execve(command_path, args, environ) == -1)
 {
@@ -194,7 +171,7 @@ free(command_path);
 exit(2);
 }
 }
-else /* Parent process */
+else
 {
 wait(&status);
 if (WIFEXITED(status))
@@ -206,5 +183,5 @@ free(args);
 }
 
 free(buffer);
-return (0);
+return (status);
 }
