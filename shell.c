@@ -104,6 +104,20 @@ return args;
 }
 
 /**
+* print_env - Prints the current environment variables.
+*/
+void print_env(void)
+{
+int i = 0;
+
+while (environ[i])
+{
+printf("%s\n", environ[i]);
+i++;
+}
+}
+
+/**
 * main - Entry point for the shell program.
 *
 * Return: Always 0.
@@ -142,8 +156,13 @@ free(buffer);
 exit(0);
 }
 
-args = tokenize_command(buffer);
+if (strcmp(buffer, "env") == 0)
+{
+print_env();
+continue;
+}
 
+args = tokenize_command(buffer);
 command_path = find_command_path(args[0]);
 
 if (!command_path)
