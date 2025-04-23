@@ -8,13 +8,22 @@
 extern char **environ;
 
 /**
-* get_path_variable - Retrieves the PATH variable using getenv().
+* get_path_variable - Retrieves the PATH variable manually.
 *
 * Return: The value of PATH, or NULL if not found.
 */
 char *get_path_variable()
 {
-return getenv("PATH");
+int i = 0;
+char *path_prefix = "PATH=";
+
+while (environ[i])
+{
+if (strncmp(environ[i], path_prefix, 5) == 0)
+return environ[i] + 5;
+i++;
+}
+return NULL;
 }
 
 /**
@@ -29,7 +38,7 @@ char *path, *token, *full_path, *dup_path;
 struct stat st;
 
 if (access(command, X_OK) == 0)
-return strdup(command); /* Direct execution for absolute/relative paths */
+return strdup(command);
 
 path = get_path_variable();
 if (!path)
@@ -99,7 +108,7 @@ return args;
 *
 * Return: Always 0.
 */
-int main(int argc, char **argv)
+int main(void)
 {
 char *buffer = NULL, *command_path;
 char **args;
@@ -108,8 +117,6 @@ ssize_t characters;
 pid_t pid;
 int status;
 int is_interactive = isatty(STDIN_FILENO);
-
-(void)argc;
 
 while (1)
 {
@@ -136,11 +143,12 @@ exit(0);
 }
 
 args = tokenize_command(buffer);
+
 command_path = find_command_path(args[0]);
 
 if (!command_path)
 {
-fprintf(stderr, "%s: 1: %s: not found\n", argv[0], args[0]);
+fprintf(stderr, "%s: command not found\n", args[0]);
 free(args);
 continue;
 }
@@ -157,7 +165,7 @@ if (pid == 0)
 {
 if (execve(command_path, args, environ) == -1)
 {
-perror(argv[0]);
+perror("./shell");
 free(args);
 free(command_path);
 exit(2);
